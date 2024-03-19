@@ -15,49 +15,10 @@
 - libp2p
 */
 use home;
-use std::{env, fs, io, path};
-
-fn dir_content(path: &path::PathBuf) -> io::Result<()> {
-    if !path.exists() {
-        eprintln!("Directory doesn't exist!");
-        return Ok(());
-    }
-
-    for element in fs::read_dir(path)? {
-        let entry = element?;
-        let path = entry.path();
-        println!("{}", path.file_name().unwrap().to_str().unwrap());
-    }
-    Ok(())
-}
-
-fn get_content(path: &path::PathBuf) -> io::Result<Vec<path::PathBuf>> {
-    let mut content = Vec::new();
-    for entry in fs::read_dir(&path)? {
-        let entry = entry?;
-        content.push(entry.path());
-    }
-
-    Ok(content)
-}
-
-fn new_path(given_path: &String) -> path::PathBuf {
-    let updated_path: path::PathBuf = given_path.into();
-    updated_path
-}
-
-fn create_directory(path: &path::PathBuf) {
-    // TODO: ask for new directory name
-    let directory_name = "New_Directory";
-    let _ = fs::create_dir(path.join(&directory_name));
-}
-
-fn create_goto_directory(path: &path::PathBuf) -> path::PathBuf {
-    // TODO: ask for new directory name
-    let directory_name = "New_Directory2";
-    let _ = fs::create_dir(path.join(&directory_name));
-    path.join(directory_name)
-}
+// use std::io::Write;
+use std::{env, path}; // , fs, io
+mod file_explorer;
+use file_explorer::fe_functions::*;
 
 fn main() {
     // setting up home directory
@@ -74,7 +35,10 @@ fn main() {
     let mut current_location = env::current_dir().unwrap();
 
     // NOTE: Display content in current directory
-    println!("Displaying the content of {}:", current_location.file_name().unwrap().to_str().unwrap());
+    println!(
+        "Displaying the content of {}:",
+        current_location.file_name().unwrap().to_str().unwrap()
+    );
     let _ = dir_content(&current_location);
 
     println!("\n======================================");
@@ -87,18 +51,15 @@ fn main() {
         }
         Err(err) => eprintln!("Error reading directory: {}", err),
     }
-    content_list.sort_by(|a, b| {
-        a.to_str()
-            .unwrap()
-            .to_lowercase()
-            .cmp(&b.to_str().unwrap().to_lowercase())
-    });
 
     // NOTE: Display those files/directories from vector
-    println!("Displaying the content of {}:", current_location.file_name().unwrap().to_str().unwrap());
+    println!(
+        "Displaying the content of {}:",
+        current_location.file_name().unwrap().to_str().unwrap()
+    );
     println!("\nDirectory contents:");
     for file in &content_list {
-        println!("{}", file.to_str().unwrap())
+        println!("{}", file.file_name().unwrap().to_str().unwrap())
     }
     println!(
         "This directory has {} files/directories.",
@@ -136,9 +97,9 @@ fn main() {
             .to_string()
     );
     let _ = dir_content(&current_location); */
-    
+
     // NOTE: Create directory
-    let _ = create_directory(&current_location);
+    create_directory(&current_location);
     // NOTE: Create directory and go into it after creation
     current_location = create_goto_directory(&current_location);
     println!(
@@ -153,6 +114,13 @@ fn main() {
     let _ = dir_content(&current_location);
 
     println!("\n======================================");
+    println!("name changes");
+    println!("Directory:");
+    new_name(path::PathBuf::from("/Users/cristiangutierrez/Pictures/Look At"));
+    println!("{}", current_location.to_str().unwrap());
+    println!("File:");
+    new_name(path::PathBuf::from("/Users/cristiangutierrez/Pictures/LookAt/tomboy anime.jpg"));
+    println!("{}", current_location.to_str().unwrap());
 
     println!("Done");
 }
