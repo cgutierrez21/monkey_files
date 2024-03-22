@@ -3,26 +3,15 @@ use super::fe_functions::get_content;
 use std::io::Write;
 use std::{io, path};
 
-// TODO: search in current directory
-pub fn only_search_current(path: &path::PathBuf) -> Vec<path::PathBuf> {
+pub fn only_search_current(path: &path::PathBuf, search_term: &String) -> Vec<path::PathBuf> {
     let (got_directories, got_files) = get_content(path);
-
-    print!("Enter filename to search: ");
-    io::stdout().flush().unwrap();
-
-    let mut search_term = String::new();
-
-    io::stdin()
-        .read_line(&mut search_term)
-        .expect("Failed to read line");
-    search_term = search_term.trim().to_string().to_lowercase(); // This will remove the newline
 
     let mut results: Vec<path::PathBuf> = Vec::new();
 
     if got_directories.len() > 0 {
         for directory in got_directories {
             let name = directory.to_str().unwrap().to_lowercase();
-            if name.contains(&search_term) {
+            if name.contains(search_term) {
                 results.push(directory.to_owned());
             }
         }
@@ -31,7 +20,7 @@ pub fn only_search_current(path: &path::PathBuf) -> Vec<path::PathBuf> {
     if got_files.len() > 0 {
         for files in got_files {
             let name = files.to_str().unwrap();
-            if name.contains(&search_term) {
+            if name.contains(search_term) {
                 results.push(files.to_owned());
             }
         }

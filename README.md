@@ -2,8 +2,8 @@
 #### File Explorer the way I want it.
 > Keep things as simple as possible and have what I need. Do not think ahead and add when needs come.
 ### What I Want
-1. Check for symlinks (fe_functions)
-2. Create symlinks (fe_functions)
+1. Check for symlinks (fe_symlinks)
+2. Create symlinks (fe_symlinks)
 4. Open files in appropriate application (fe_functions)
 ### What's Been Implemented
 1. Display what's in a directory (fe_functions)

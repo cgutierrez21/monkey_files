@@ -107,5 +107,3 @@ pub fn new_name(path: path::PathBuf) {
         parent_path.join(&new_filename),
     );
 }
-
-// TODO: search in current directory

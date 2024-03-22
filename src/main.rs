@@ -1,4 +1,5 @@
 #![allow(warnings)]
+// TODO: symlink detection
 // TODO: look at each crate to see what to explore
 /*
 - hyper or reqwest
@@ -20,20 +21,21 @@
 Variables used throughout project
 - home_directory: self explanatory
 - current_location: which directory are we currently in
-- content_list: what is in the current directory - one vector of directories one vector of files
 - got_directories: the vector of directories from content_list
 - got_files: the vector of files from content_list
 */
 use home;
 use std::io::Write;
-use std::{env, path, io}; // , fs
+use std::{env, io, path}; // , fs
 mod file_explorer;
 use file_explorer::fe_functions::*;
+use file_explorer::fe_input::*;
 use file_explorer::fe_search::*;
 
 fn main() {
-    // setting up home directory
     let home_directory: path::PathBuf;
+    let mut current_location = env::current_dir().unwrap();
+    // setting up home directory
     if let Some(path) = home::home_dir() {
         home_directory = path;
     } else {
@@ -43,9 +45,7 @@ fn main() {
     println!("Your home directory: {}", home_directory.display());
 
     // setting up current directory
-    let mut current_location = env::current_dir().unwrap();
 
-    // NOTE: Display content in current directory
     println!(
         "Displaying the content of {}:",
         current_location.file_name().unwrap().to_str().unwrap()
@@ -57,7 +57,6 @@ fn main() {
     // NOTE: Vector with content of current directory
     let (mut got_directories, mut got_files) = get_content(&current_location);
 
-    // NOTE: Display those files/directories from vector
     println!(
         "Displaying the content of {}:",
         current_location.file_name().unwrap().to_str().unwrap()
@@ -96,8 +95,6 @@ fn main() {
 
     println!("\n======================================");
 
-    // NOTE: Go up a directory
-
     /* current_location.pop();
     println!(
         "Now in the {} directory:",
@@ -110,9 +107,8 @@ fn main() {
     );
     let _ = dir_content(&current_location); */
 
-    /* // NOTE: Create directory
+    /*
     create_directory(&current_location);
-    // NOTE: Create directory and go into it after creation
     current_location = create_goto_directory(&current_location);
     println!(
         "Now in the {} directory:",
@@ -127,8 +123,6 @@ fn main() {
 
     println!("\n======================================");
 
-    // NOTE: Rename directory/file
-
     /* println!("name changes");
     println!("Directory:");
     new_name(path::PathBuf::from(
@@ -141,9 +135,13 @@ fn main() {
     ));
     println!("{}", current_location.to_str().unwrap()); */
 
-
     println!("\n======================================");
-    let search_results = only_search_current(&current_location);
+
+    let mut search_term = String::new();
+
+    search_term = user_input().to_lowercase(); // This will remove the newline
+
+    let search_results = only_search_current(&current_location, &search_term);
     if search_results.len() < 1 {
         println!("No results found.")
     } else {
@@ -156,20 +154,10 @@ fn main() {
 
     println!("\n======================================");
 
-    print!("Enter filename to search: ");
-    io::stdout().flush().unwrap();
-
-    let mut search_term = String::new();
-
-    io::stdin()
-        .read_line(&mut search_term)
-        .expect("Failed to read line");
-
-    search_term = search_term.trim().to_string().to_lowercase(); // This will remove the newline
-
+    search_term = user_input().to_lowercase(); // This will remove the newline
     let new_search_results = start_search_current(&current_location, &search_term);
 
-    if new_search_results.len() < 1 {
+    if new_search_results.is_empty() {
         println!("No results found.")
     } else {
         println!("{} resulsts found.", new_search_results.len());
@@ -181,18 +169,11 @@ fn main() {
 
     println!("\n======================================");
 
-    print!("Enter filename to search: ");
-    io::stdout().flush().unwrap();
-
-    io::stdin()
-        .read_line(&mut search_term)
-        .expect("Failed to read line");
-
-    search_term = search_term.trim().to_string().to_lowercase(); // This will remove the newline
+    search_term = user_input().to_lowercase(); // This will remove the newline
 
     let new_search_results = system_search(&search_term);
 
-    if new_search_results.len() < 1 {
+    if new_search_results.is_empty() {
         println!("No results found.")
     } else {
         println!("{} resulsts found.", new_search_results.len());
@@ -201,7 +182,6 @@ fn main() {
         }
         println!("End of results.")
     }
-
 
     println!("Done");
 }
