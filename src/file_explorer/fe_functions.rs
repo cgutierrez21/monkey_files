@@ -2,35 +2,46 @@
 use std::io::Write;
 use std::{fs, io, path}; // env,
 
-pub fn dir_content(path: &path::PathBuf) -> io::Result<()> {
+pub fn dir_content(path: &path::PathBuf) {
     if !path.exists() {
         eprintln!("Directory doesn't exist!");
-        return Ok(());
+        return;
     }
 
-    for element in fs::read_dir(path)? {
-        let entry = element?;
+    for element in fs::read_dir(path).unwrap() {
+        let entry = element.unwrap();
         let path = entry.path();
         println!("{}", path.file_name().unwrap().to_str().unwrap());
     }
-    Ok(())
 }
 
-pub fn get_content(path: &path::PathBuf) -> io::Result<Vec<path::PathBuf>> {
-    let mut content = Vec::new();
-    for entry in fs::read_dir(&path)? {
-        let entry = entry?;
-        content.push(entry.path());
+pub fn get_content(path: &path::PathBuf) -> (Vec<path::PathBuf>, Vec<path::PathBuf>) {
+    let mut directories = Vec::new();
+    let mut files = Vec::new();
+    for entry in fs::read_dir(&path).unwrap() {
+        let current_entry = entry.unwrap().path();
+
+        if current_entry.is_dir() {
+            directories.push(current_entry);
+        } else if current_entry.is_file() {
+            files.push(current_entry);
+        }
     }
 
-    content.sort_by(|a, b| {
+    directories.sort_by(|a, b| {
         a.to_str()
             .unwrap()
             .to_lowercase()
             .cmp(&b.to_str().unwrap().to_lowercase())
     });
 
-    Ok(content)
+    files.sort_by(|a, b| {
+        a.to_str()
+            .unwrap()
+            .to_lowercase()
+            .cmp(&b.to_str().unwrap().to_lowercase())
+    });
+    (directories, files)
 }
 
 /* pub fn new_path(given_path: String) -> path::PathBuf {
@@ -96,3 +107,5 @@ pub fn new_name(path: path::PathBuf) {
         parent_path.join(&new_filename),
     );
 }
+
+// TODO: search in current directory
