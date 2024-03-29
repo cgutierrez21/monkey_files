@@ -1,25 +1,39 @@
+/*
+   reasons for symlinks:
+   - get different icon
+   - look for original file/directory
+   - create symlink
+   - include or exclude symlinks in search
+   - display info from original file/directory
+*/
 // use home;
 use std::io::Write;
 use std::{fs, io, path}; // env,
 
-pub fn dir_content(path: &path::PathBuf) {
+pub fn dir_content(path: &path::PathBuf) -> io::Result<()> {
     if !path.exists() {
         eprintln!("Directory doesn't exist!");
-        return;
+        return Err(io::Error::new(io::ErrorKind::NotFound, "Directory doesn't exist!"));
     }
 
-    for element in fs::read_dir(path).unwrap() {
-        let entry = element.unwrap();
+    for element in fs::read_dir(path)? {
+        let entry = element?;
         let path = entry.path();
-        println!("{}", path.file_name().unwrap().to_str().unwrap());
+        if path.is_symlink() {
+            println!("{} -> {}", path.file_name().unwrap().to_str().unwrap(), path.read_link().unwrap().display());
+        } else {
+            println!("{}", path.file_name().unwrap().to_str().unwrap());
+        }
     }
+
+    Ok(())
 }
 
-pub fn get_content(path: &path::PathBuf) -> (Vec<path::PathBuf>, Vec<path::PathBuf>) {
+pub fn get_content(path: &path::PathBuf) -> io::Result<(Vec<path::PathBuf>, Vec<path::PathBuf>)> {
     let mut directories = Vec::new();
     let mut files = Vec::new();
-    for entry in fs::read_dir(&path).unwrap() {
-        let current_entry = entry.unwrap().path();
+    for entry in fs::read_dir(&path)? {
+        let current_entry = entry?.path();
 
         if current_entry.is_dir() {
             directories.push(current_entry);
@@ -41,13 +55,14 @@ pub fn get_content(path: &path::PathBuf) -> (Vec<path::PathBuf>, Vec<path::PathB
             .to_lowercase()
             .cmp(&b.to_str().unwrap().to_lowercase())
     });
-    (directories, files)
+
+    Ok((directories, files))
 }
 
-/* pub fn new_path(given_path: String) -> path::PathBuf {
+pub fn new_path(given_path: String) -> path::PathBuf {
     let updated_path: path::PathBuf = given_path.into();
     updated_path
-} */
+}
 
 pub fn create_directory(path: &path::PathBuf) {
     print!("Enter name of new directory: ");

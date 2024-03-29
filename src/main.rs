@@ -55,12 +55,19 @@ fn main() {
     println!("\n======================================");
 
     // NOTE: Vector with content of current directory
-    let (mut got_directories, mut got_files) = get_content(&current_location);
+    let (mut got_directories, mut got_files) = match get_content(&current_location) {
+        Ok(result) => result,
+        Err(err) => {
+            println!("{}", err);
+            return;
+        }
+    };
 
     println!(
         "Displaying the content of {}:",
         current_location.file_name().unwrap().to_str().unwrap()
     );
+
     println!(
         "This directory has {} directories and {} files.",
         got_directories.len(),
@@ -141,7 +148,14 @@ fn main() {
 
     search_term = user_input().to_lowercase(); // This will remove the newline
 
-    let search_results = only_search_current(&current_location, &search_term);
+    let search_results = match only_search_current(&current_location, &search_term) {
+        Ok(result) => result,
+        Err(err) => {
+            println!("{}", err);
+            return;
+        }
+    };
+
     if search_results.len() < 1 {
         println!("No results found.")
     } else {
@@ -155,12 +169,18 @@ fn main() {
     println!("\n======================================");
 
     search_term = user_input().to_lowercase(); // This will remove the newline
-    let new_search_results = start_search_current(&current_location, &search_term);
+    let new_search_results = match start_search_current(&current_location, &search_term) {
+        Ok(result) => result,
+        Err(err) => {
+            println!("{}", err);
+            return;
+        }
+    };
 
     if new_search_results.is_empty() {
         println!("No results found.")
     } else {
-        println!("{} resulsts found.", new_search_results.len());
+        println!("{} results found.", new_search_results.len());
         for found in new_search_results {
             println!("{}", found.display());
         }
@@ -171,7 +191,13 @@ fn main() {
 
     search_term = user_input().to_lowercase(); // This will remove the newline
 
-    let new_search_results = system_search(&search_term);
+    let new_search_results = match system_search(&search_term) {
+        Ok(result) => result,
+        Err(err) => {
+            println!("{}", err);
+            return;
+        }
+    };
 
     if new_search_results.is_empty() {
         println!("No results found.")

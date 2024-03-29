@@ -1,10 +1,29 @@
-use home;
+/*
+   reasons for symlinks:
+   - get different icon
+   - look for origianl file/directory
+   - create symlink
+   - include or exclude symlinks in search
+   - display info from original file/directory
+*/
 use super::fe_functions::get_content;
+use home;
 use std::io::Write;
 use std::{io, path};
 
-pub fn only_search_current(path: &path::PathBuf, search_term: &String) -> Vec<path::PathBuf> {
-    let (got_directories, got_files) = get_content(path);
+pub fn only_search_current(
+    path: &path::PathBuf,
+    search_term: &String,
+) -> io::Result<(Vec<path::PathBuf>)> {
+    let (got_directories, got_files) = match get_content(path) {
+        Ok(result) => result,
+        Err(_) => {
+            return Err(io::Error::new(
+                io::ErrorKind::NotFound,
+                "Directory doesn't exist!",
+            ));
+        }
+    };
 
     let mut results: Vec<path::PathBuf> = Vec::new();
 
@@ -26,11 +45,22 @@ pub fn only_search_current(path: &path::PathBuf, search_term: &String) -> Vec<pa
         }
     }
 
-    results
+    Ok(results)
 }
 
-pub fn start_search_current(path: &path::PathBuf, search_term: &String) -> Vec<path::PathBuf> {
-    let (got_directories, got_files) = get_content(path);
+pub fn start_search_current(
+    path: &path::PathBuf,
+    search_term: &String,
+) -> io::Result<(Vec<path::PathBuf>)> {
+    let (got_directories, got_files) = match get_content(path) {
+        Ok(result) => result,
+        Err(_) => {
+            return Err(io::Error::new(
+                io::ErrorKind::NotFound,
+                "Directory doesn't exist!",
+            ));
+        }
+    };
 
     let mut results: Vec<path::PathBuf> = Vec::new();
 
@@ -46,7 +76,7 @@ pub fn start_search_current(path: &path::PathBuf, search_term: &String) -> Vec<p
                 results.push(directory.to_owned());
             }
             let mut temp = start_search_current(&directory, &search_term);
-            results.append(&mut temp);
+            results.append(&mut temp?);
         }
     }
 
@@ -87,13 +117,21 @@ pub fn start_search_current(path: &path::PathBuf, search_term: &String) -> Vec<p
     final_results.append(&mut directory_results);
     final_results.append(&mut file_results);
 
-    final_results
+    Ok(final_results)
 }
 
-pub fn system_search(search_term: &String) -> Vec<path::PathBuf> {
+pub fn system_search(search_term: &String) -> io::Result<(Vec<path::PathBuf>)> {
     let path: path::PathBuf = home::home_dir().unwrap();
 
-    let (got_directories, got_files) = get_content(&path);
+    let (got_directories, got_files) = match get_content(&path) {
+        Ok(result) => result,
+        Err(_) => {
+            return Err(io::Error::new(
+                io::ErrorKind::NotFound,
+                "Directory doesn't exist!",
+            ));
+        }
+    };
 
     let mut results: Vec<path::PathBuf> = Vec::new();
 
@@ -109,7 +147,7 @@ pub fn system_search(search_term: &String) -> Vec<path::PathBuf> {
                 results.push(directory.to_owned());
             }
             let mut temp = start_search_current(&directory, &search_term);
-            results.append(&mut temp);
+            results.append(&mut temp?);
         }
     }
 
@@ -150,5 +188,5 @@ pub fn system_search(search_term: &String) -> Vec<path::PathBuf> {
     final_results.append(&mut directory_results);
     final_results.append(&mut file_results);
 
-    final_results
+    Ok(final_results)
 }
