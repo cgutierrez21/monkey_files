@@ -8,7 +8,6 @@
 - mime
 - hyper-tls
 - serde_json
-- walkdir
 - filetime
 - gtk-rs
 - iced
@@ -23,6 +22,8 @@ Variables used throughout project
 - current_location: which directory are we currently in
 - got_directories: the vector of directories from content_list
 - got_files: the vector of files from content_list
+- search_term: self explanatory
+- search_results: self explanatory
 */
 use home;
 use std::io::Write;
@@ -35,6 +36,9 @@ use file_explorer::fe_search::*;
 fn main() {
     let home_directory: path::PathBuf;
     let mut current_location = env::current_dir().unwrap();
+    let mut search_term = String::new();
+    let mut got_directories = Vec::new();
+    let mut got_files = Vec::new();
     // setting up home directory
     if let Some(path) = home::home_dir() {
         home_directory = path;
@@ -55,11 +59,14 @@ fn main() {
     println!("\n======================================");
 
     // NOTE: Vector with content of current directory
-    let (mut got_directories, mut got_files) = match get_content(&current_location) {
-        Ok(result) => result,
+    println!("get_content function");
+    match get_content(&current_location) {
+        Ok((directories, files)) => {
+            got_directories = directories;
+            got_files = files;
+        }
         Err(err) => {
             println!("{}", err);
-            return;
         }
     };
 
@@ -68,20 +75,28 @@ fn main() {
         current_location.file_name().unwrap().to_str().unwrap()
     );
 
-    println!(
-        "This directory has {} directories and {} files.",
-        got_directories.len(),
-        got_files.len(),
-    );
-
-    println!("Directories:");
-    for directory in got_directories {
-        println!("{}", directory.file_name().unwrap().to_str().unwrap());
+    if got_directories.is_empty() {
+        println!(
+            "Directory, {}, has no directories\n",
+            current_location.file_name().unwrap().to_str().unwrap()
+        );
+    } else {
+        println!("Directories:");
+        for directory in got_directories {
+            println!("{}", directory.file_name().unwrap().to_str().unwrap());
+        }
     }
 
-    println!("Files: ");
-    for files in got_files {
-        println!("{}", files.file_name().unwrap().to_str().unwrap());
+    if got_files.is_empty() {
+        println!(
+            "Directory, {}, has no files\n",
+            current_location.file_name().unwrap().to_str().unwrap()
+        );
+    } else {
+        println!("Files: ");
+        for files in got_files {
+            println!("{}", files.file_name().unwrap().to_str().unwrap());
+        }
     }
 
     println!("\n======================================");
@@ -144,11 +159,10 @@ fn main() {
 
     println!("\n======================================");
 
-    let mut search_term = String::new();
-
+    println!("only_search_current function");
     search_term = user_input().to_lowercase(); // This will remove the newline
 
-    let search_results = match only_search_current(&current_location, &search_term) {
+    let mut search_results = match only_search_current(&current_location, &search_term) {
         Ok(result) => result,
         Err(err) => {
             println!("{}", err);
@@ -168,8 +182,10 @@ fn main() {
 
     println!("\n======================================");
 
+    println!("start_search_current function");
     search_term = user_input().to_lowercase(); // This will remove the newline
-    let new_search_results = match start_search_current(&current_location, &search_term) {
+
+    search_results = match start_search_current(&current_location, &search_term) {
         Ok(result) => result,
         Err(err) => {
             println!("{}", err);
@@ -177,11 +193,11 @@ fn main() {
         }
     };
 
-    if new_search_results.is_empty() {
+    if search_results.is_empty() {
         println!("No results found.")
     } else {
-        println!("{} results found.", new_search_results.len());
-        for found in new_search_results {
+        println!("{} results found.", search_results.len());
+        for found in search_results {
             println!("{}", found.display());
         }
         println!("End of results.")
@@ -189,7 +205,9 @@ fn main() {
 
     println!("\n======================================");
 
-    search_term = user_input().to_lowercase(); // This will remove the newline
+    // NOTE: system-wide search
+
+    /* search_term = user_input().to_lowercase(); // This will remove the newline
 
     let new_search_results = match system_search(&search_term) {
         Ok(result) => result,
@@ -207,7 +225,7 @@ fn main() {
             println!("{}", found.display());
         }
         println!("End of results.")
-    }
+    } */
 
     println!("Done");
 }
